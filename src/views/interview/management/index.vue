@@ -161,6 +161,7 @@
     v-model:showAllowcate="showAllowcate"
     :application-id="allowcateApplicationId"
     :interview-type="interviewType === InterviewType.Team ? 'team' : 'group'"
+    :current-group="currentGroup"
   />
   <!-- 分配选手面试时间弹窗 -->
 </template>

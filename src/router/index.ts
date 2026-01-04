@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import NotFound from '@/views/notFound/index.vue';
 import { NO_PERMISSION } from './routes/base';
 // import DETAIL from './routes/candidate';
 import { appRoutes } from './routes';
@@ -16,7 +17,7 @@ const router = createRouter({
     NO_PERMISSION,
     {
       path: '/:pathMatch(.*)',
-      component: import('@/views/notFound/index.vue'),
+      component: NotFound,
     },
   ],
   scrollBehavior(_to, _from, savedPosition) {

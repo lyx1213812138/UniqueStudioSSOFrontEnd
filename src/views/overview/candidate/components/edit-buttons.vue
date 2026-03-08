@@ -2,7 +2,7 @@
   <div class="flex justify-end gap-2 items-center">
     <a-button
       type="primary"
-      :disabled="props.curStep >= recruitSteps.length - 1 || !candidates.length"
+      :disabled="isSwitchStageDisabled"
       :size="buttonSize"
       class="max-sm:rounded-full rounded-none"
       @click="openSwitchStage"
@@ -10,19 +10,23 @@
       {{ $t('common.operation.switchStage') }}
     </a-button>
     <a-button
-      status="danger"
-      :disabled="props.curStep >= recruitSteps.length || !candidates.length"
+      :status="allRejected ? 'success' : 'danger'"
+      :disabled="isReviveStageDisabled"
       :size="buttonSize"
       class="max-sm:rounded-full rounded-none"
       @click="openTerminate"
     >
-      {{ $t('common.operation.terminate') }}
+      {{
+        allRejected
+          ? $t('common.operation.revive')
+          : $t('common.operation.terminate')
+      }}
     </a-button>
     <a-button
       type="outline"
       class="max-sm:hidden"
       :size="buttonSize"
-      :disabled="props.curStep >= recruitSteps.length || !candidates.length"
+      :disabled="isNotifyDisabled"
       @click="openNotify"
     >
       <template #icon> <icon-plus /> </template>
@@ -32,7 +36,7 @@
       type="outline"
       class="sm:hidden rounded-full"
       :size="buttonSize"
-      :disabled="!candidates.length"
+      :disabled="isNotifyDisabled"
       @click="openNotify"
     >
       {{ $t('common.operation.sendNotification') }}
@@ -90,6 +94,23 @@
   >
     <div class="text-center">
       <i18n-t keypath="candidate.terminate" tag="div">
+        <template #num>
+          <span class="text-[rgb(var(--primary-6))]">{{
+            candidates.length
+          }}</span>
+        </template>
+      </i18n-t>
+    </div>
+  </a-modal>
+  <a-modal
+    v-model:visible="showRevive"
+    simple
+    message-type="warning"
+    :title="$t('common.operation.confirmRevive')"
+    :on-before-ok="handleRevive"
+  >
+    <div class="text-center">
+      <i18n-t keypath="candidate.revive" tag="div">
         <template #num>
           <span class="text-[rgb(var(--primary-6))]">{{
             candidates.length
@@ -164,9 +185,25 @@ const allAccepted = computed(() =>
 const allRejected = computed(() =>
   props.candidates.every(({ rejected }) => rejected),
 );
+const isSwitchStageDisabled = computed(
+  () =>
+    props.curStep >= recruitSteps.length - 1 ||
+    !props.candidates.length ||
+    !allAccepted.value,
+);
+const isReviveStageDisabled = computed(
+  () => !props.candidates.length || (!allAccepted.value && !allRejected.value),
+);
+const isNotifyDisabled = computed(
+  () =>
+    props.curStep >= recruitSteps.length ||
+    !props.candidates.length ||
+    (!allAccepted.value && !allRejected.value),
+);
 
 const showSwitchStage = ref(false);
 const showTerminate = ref(false);
+const showRevive = ref(false);
 const showNotify = ref(false);
 
 const nextStep = ref(recruitSteps[props.curStep + 1]?.value[0] ?? Step.Pass);
@@ -208,11 +245,11 @@ const handleSwitchStage = async () => {
 };
 
 const openTerminate = () => {
-  if (!allAccepted.value) {
-    Message.error(t('candidate.noAbandonedRejected'));
-    return;
+  if (allRejected.value) {
+    showRevive.value = true;
+  } else {
+    showTerminate.value = true;
   }
-  showTerminate.value = true;
 };
 
 const handleTerminate = async () => {
@@ -230,6 +267,11 @@ const handleTerminate = async () => {
     props.onDone?.();
     recStore.refresh();
   }
+};
+
+const handleRevive = async () => {
+  Message.info(t('common.result.reviveTodo'));
+  return true;
 };
 
 const openNotify = () => {

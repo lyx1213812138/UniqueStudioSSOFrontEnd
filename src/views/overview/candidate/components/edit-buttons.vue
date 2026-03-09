@@ -173,6 +173,7 @@ const props = defineProps({
   },
   onDone: {
     type: Function,
+    default: () => {},
   },
 });
 
@@ -217,7 +218,7 @@ const handleSwitchStage = async () => {
       ),
     );
     return true;
-  } catch (err) {
+  } catch {
     return false;
   } finally {
     if (res?.every((x) => x))
@@ -249,7 +250,7 @@ const handleTerminate = async () => {
       props.candidates.map(({ aid }) => rejectApplication(aid)),
     );
     return true;
-  } catch (err) {
+  } catch {
     return false;
   } finally {
     if (res?.every((x) => x))
